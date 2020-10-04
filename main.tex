@@ -1,0 +1,192 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\input{everything.tex}
+\newcommand{\E}{\mathbb{E}}
+\usepackage{algorithm,algorithmic}
+\title{Convergence of Stochastic Levenberg Marquardt}
+%\author{El houcine Bergou}
+%\date{March 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{State of the art on Levenberg-Marquard methods}
+
+
+Globally convergent variants of the Gauss-Newton algorithm are often the methods of choice to tackle nonlinear least-squares problems. Among such frameworks, Levenberg-Marquardt method (LM) \cite{KLevenberg_1944, DMarquardt_1963, EBergou_YDiouane_VKungurtsev_2020}. LM algorithm  can be seen as a regularization of the Gauss–Newton method.  A regularization parameter is updated at every iteration and indirectly controls the size of the step, making Gauss–Newton globally convergent (i.e., convergent to stationarity independently of the starting point). Variants of LM algorithm have been  studied also when the Gauss-Newton subproblem model is replaced by a random model that is 
+only accurate with a given probability \cite{EBergou_SGratton_LNVicente_2016, EBergou_YDiouane_VKungurtsev_CWRoyer_2018}. They have also been applied to problems where the 
+objective value is subject to noise \cite{JJMore_1977, SBellavia_SGratton_ERiccietti_2018}. 
+
+In this paper, we consider a stochastic Levenberg-Marquardt algorithm 
+that handles particular random models, i.e., models which uses only a random sub set of the sum of the classical model... 
+\houcine{describe SLM}
+
+\section{Stochastic Levenberg-Marquardt with fixed regularization}
+
+In this paper we consider the following least squares problem
+\begin{equation}
+    \min_{x\in \R^d} f(x) := \frac{1}{2} \| F(x)\|^2 = \frac{1}{2} \sum_{i=1}^n F_i(x)^2,
+\end{equation}
+where $f:~~ \R^{d} \to \R $ and $F_i:~~ \R^{d} \to \R, $ for $i=1,\ldots,n$ are assumed twice continuously differentiable.
+
+We will use the following notation for Algorithm \ref{alg:SLM}: 
+$f^k = f(x^k)$, $F^k = F(x^k),$ $J^k = S^k\nabla F(x^k)$, $g^k= \nabla f(x^k) = \nabla F(x^k)^T F^k$, $\Tilde{g}^k = \nabla F(x^k)^T S^k F^k$, where $S^k \in \R^{d,d}$ is a diagonal matrix with ones and zeros randomly distributed over the diagonal scaled by the number of non zero elements divided by $d$.
+\begin{remark}
+Our analysis can be easily generalized to cover more distributions to choose $S^k$. However, for the seek of simplicity and ease of readability of our proofs we limit ourselves here to the above-mentioned distribution. 
+\end{remark}
+
+
+
+\begin{algorithm}
+\caption{\bf  Stochastic Levenberg Marquardt Algorithm}
+\vspace{-4ex}
+\label{alg:SLM}
+\begin{rm}
+\begin{description}
+\item[]
+\vspace{3ex}
+\item[Initialization] \ \\
+Choose $x^0$.
+\vspace{1ex}
+\item[For $k=0,1,2,\ldots$] \ \\
+\vspace{-2ex}
+%\begin{itemize}
+%\item \textbf{Draw:} $\xi_1=1$ with proba $p$.
+%\item 
+Compute 
+\begin{equation}\label{eq:iter_update}
+x^{k+1} = x^k - ({J^k}^\top J^k + \mu I)^{-1} \tilde{g}^k
+\end{equation}
+%\end{itemize}
+\end{description}
+\end{rm}
+\end{algorithm}
+
+
+
+We state the general assumptions we make (several of which are classical ones) that we use for the convergence analysis of Algorithm \ref{alg:SLM}
+\begin{assumption}(Lower bound) \label{assum:lower_bound}
+The function $f$ is lower bounded; that is, there exists an $f^\star \in\R$ such that $f(x)\ge f^\star$, for all $x$. 
+\end{assumption}
+\begin{assumption}($\cL $-smoothness) \label{assm:smoothness}
+The function $f$ is $\cL $ smooth if its gradient is $\cL $-Lipschitz continuous, that is, for all $x,y\in\R^d$, $$\textstyle{ f(x) \le f(y) + \nabla f(y)^\top (x-y)  + \frac{\cL}{2} \|x-y\|^2}.$$  
+\end{assumption}
+\begin{assumption}(Boundness of stochastic gradient)\label{assum:Unbiased_grad}
+The stochastic gradient is bounded by $G>0$, that is,
+ \begin{eqnarray*}
+\textstyle\mathbb{E}_{}\left[\|\tilde{g}^k\|\right] \le G.
+\end{eqnarray*} 
+\end{assumption} 
+Note that  the latter inequality implies (using Jensen's inequality)
+\begin{eqnarray*}
+\textstyle\mathbb{E}_{}\left[\|\tilde{g}^k\|\right]^2 \le G^2.
+\end{eqnarray*} 
+\begin{assumption}\label{assum:bounded_jac}
+ The function $F$ Jacobian is bounded by $\kappa_J>0$, that is,
+  \begin{eqnarray*}
+\textstyle\mathbb{E}_{}\left[\|\nabla F(x^k)\|\right] \le \kappa_J.
+\end{eqnarray*} 
+
+\end{assumption}
+The latter Assumption implies 
+ \begin{eqnarray*}
+\textstyle\mathbb{E}_{}\left[\|J^k\|\right] \le \kappa_J, \text{ independently from } S^k.
+\end{eqnarray*} 
+\begin{lemma}(Unbiasedness of stochastic gradient)\label{lem:Unbiased_grad}
+The stochastic gradient is unbiased that is,
+ \begin{eqnarray*}
+\textstyle\mathbb{E}_{}\left[\tilde{g}^k| x^k \right] = g^k = \nabla f(x^k).
+\end{eqnarray*} 
+\end{lemma} 
+\begin{proof}
+It is direct from the fact that $\mathbb{E}_{}\left[S^k \right] = I$
+\end{proof}
+\begin{lemma} \label{lem:smwf}
+$$\left({J^k}^\top J^k + \mu I\right)^{-1} = \frac{I}{\mu} - \frac{1}{\mu^2} {J^k}^\top\left(\frac{1}{\mu }J^k {J^k}^\top  +  I\right)^{-1}J^k$$
+\end{lemma}
+\begin{proof}
+Direct by using Sherman Morrison Woodbury formula.
+\end{proof}
+\begin{lemma}\label{lem:boundft} Let Assumptions \ref{assum:bounded_jac} and \ref{assum:Unbiased_grad} hold, then 
+$$\E\left[\left\|\nabla f^k\frac{1}{\mu^2} {J^k}^\top\left(\frac{1}{\mu }J^k {J^k}^\top  +  I\right)^{-1}J^k \tilde{g}^k\right\| |x^k \right]\le \kappa_J^2 G^2.$$
+\end{lemma}
+\begin{proof}
+\begin{eqnarray*}
+\left\|{\nabla f^k}^\top {J^k}^\top\left(\frac{1}{\mu }J^k {J^k}^\top  +  I\right)^{-1}J^k \tilde{g}^k\right\|&\le& \left\|{\nabla f^k} \right\| \left\| {J^k}\right\|^2 \left\| \left(\frac{1}{\mu }J^k {J^k}^\top  +  I\right)^{-1} \right\| \left\|\tilde{g}^k\right\| \\
+&\le & \kappa_J^2 G \left\|\tilde{g}^k\right\|.
+\end{eqnarray*}
+Now, by taking the conditional expectation and using Assumption \ref{assum:Unbiased_grad}, we get the desired result.
+\end{proof}
+\begin{lemma}\label{lem:boundst} Let Assumption \ref{assum:Unbiased_grad} hold, then 
+$$\E\left[\left\|({J^k}^\top J^k + \mu I)^{-1} \tilde{g}^k\right\|^2 | x^k\right] \le \frac{ G^2}{\mu^2}$$
+\end{lemma}
+\begin{proof}
+\begin{eqnarray*}
+\left\|({J^k}^\top J^k + \mu I)^{-1} \tilde{g}^k\right\|^2 &\le&  \left\| ({J^k}^\top J^k + \mu I)^{-1} \right\|^2 \left\|\tilde{g}^k\right\|^2 \\
+&\le & \frac{ \left\|\tilde{g}^k\right\|^2}{\mu^2}.
+\end{eqnarray*}
+Now, by taking the conditional expectation and using Assumption \ref{assum:Unbiased_grad} we get the desired result.
+\end{proof}
+
+\begin{theorem} \label{thm:convergence}%(Non convex case.) 
+ Let Assumptions \ref{assum:lower_bound},  \ref{assm:smoothness}, \ref{assum:Unbiased_grad} and \ref{assum:bounded_jac} hold. Let $K>0$, $\mu_0 > 0$ and $\mu =\mu_0 {\sqrt{K+1}}$, then
+  %\begin{eqnarray*}
+%\textstyle 
+%\min_{k \in \{0,\ldots,K\}}\mathbb{E}[\|\nabla f^k\|^2] \le \tfrac{\sum_{k=1}^K \mathbb{E} \|\nabla f^k\|^2}{K} \leq \cO\left(\tfrac{1}{\sqrt{K}}\right).
+%\end{eqnarray*}
+\begin{eqnarray*}
+ \frac{\sum_{k=0}^K \mathbb{E} \|\nabla f^k\|^2}{K+1} \leq \frac{C}{\sqrt{K+1}},
+ %+\frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu_0 \sqrt{K+1}}.
+\end{eqnarray*}
+where $$C:= \mu_0 \left(f^0 - f^*\right)+\frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu_0}.$$
+\end{theorem}
+\begin{proof}
+From the $\cL$-smoothness of the function $f$ we have  
+\begin{eqnarray*}
+f^{k+1}&\le & f^{k} - {\nabla f^k}^\top (x^{k+1}-x^k) + \frac{\cL }{2}\|x^{k+1}-x^k\|^2\\
+&\overset{{\rm By~ eq:\;}\eqref{eq:iter_update}}=& f^{k}-{\nabla f^k}^\top \left({J^k}^\top J^k + \mu I\right)^{-1} \tilde{g}^k+ \frac{\cL }{2}\left\|({J^k}^\top J^k + \mu I)^{-1} \tilde{g}^k\right\|^2\\
+&\overset{{\rm By~ Lemma \;}\ref{lem:smwf}}=& f^{k}-\frac{1}{\mu}{\nabla f^k}^\top \tilde{g}^k + \frac{1}{\mu^2}{\nabla f^k}^\top  {J^k}^\top\left(\frac{1}{\mu }J^k {J^k}^\top  +  I\right)^{-1}J^k \tilde{g}^k+ \frac{\cL }{2}\left\|({J^k}^\top J^k + \mu I)^{-1} \tilde{g}^k\right\|^2
+%\\
+%&=& f^{k}-\frac{1}{\mu}\|\nabla f^k\|^2 + \frac{\kappa_J^2 G^2}{\mu^2}+ \frac{\cL G^2}{2 \mu^2},
+\end{eqnarray*} 
+which after taking the conditional expectation and by using Lemmas \ref{lem:Unbiased_grad}, \ref{lem:boundft} and \ref{lem:boundst}, we get 
+\begin{eqnarray*}
+\mathbb{E}[f^{k+1}| x^k] \leq f^k -\frac{1}{\mu}\|\nabla f^k\|^2 + \frac{\kappa_J^2 G^2}{\mu^2}+ \frac{\cL G^2}{2 \mu^2},
+\end{eqnarray*}
+which after taking the expectation (by using tower property) we get 
+\begin{eqnarray*}
+\mathbb{E}[f^{k+1}] \leq \E[f^k] -\frac{1}{\mu}\E[\|\nabla f^k\|^2] + \frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu}.
+\end{eqnarray*}
+By rearranging the terms and multiplying by $\mu$ we get 
+\begin{eqnarray*}
+\E[\|\nabla f^k\|^2] \leq \mu \left(\E[f^k] - \mathbb{E}[f^{k+1}]\right) + \frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu}.
+\end{eqnarray*}
+By summing the latter inequality over $k$ from $0$ to $K$ and dividing by $K+1$ we get
+ \begin{eqnarray*}
+ \tfrac{\sum_{k=0}^K \mathbb{E} \|\nabla f^k\|^2}{K+1} \leq \frac{\mu \left(f^0 - \mathbb{E}[f^{K+1}]\right)}{{K+1}}+\frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu}.
+\end{eqnarray*}
+By changing $\mu$ in the last inequality by $\mu_0 {\sqrt{K+1}}$, and using Assumption \ref{assum:lower_bound} we get the desired result.
+\end{proof}
+
+\begin{corollary}
+  \label{cor:convergence}%(Non convex case.) 
+ Let Assumptions \ref{assum:lower_bound},  \ref{assm:smoothness}, \ref{assum:Unbiased_grad} and \ref{assum:bounded_jac} hold. Let $K>0$,  $\mu_0 > 0$ and $\mu =\mu_0 {\sqrt{K+1}}$, then
+  %\begin{eqnarray*}
+%\textstyle 
+%\min_{k \in \{0,\ldots,K\}}\mathbb{E}[\|\nabla f^k\|^2] \le \tfrac{\sum_{k=1}^K \mathbb{E} \|\nabla f^k\|^2}{K} \leq \cO\left(\tfrac{1}{\sqrt{K}}\right).
+%\end{eqnarray*}
+\begin{eqnarray*}
+ \textstyle 
+\min_{k \in \{0,\ldots,K\}}\mathbb{E}[\|\nabla f^k\|^2] \leq \cO \left(\tfrac{1}{\sqrt{K+1}}\right).
+ %+\frac{2 \kappa_J^2 G^2 + \cL G^2}{2\mu_0 \sqrt{K+1}}.
+\end{eqnarray*}
+\end{corollary}
+\begin{proof}
+Direct from Theorem \ref{thm:convergence}.
+\end{proof}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
